@@ -16,9 +16,11 @@ app.get('/resource', (req, res) => {
     const token = auth.split(' ')[1]
     try {
         const decoded = jwt.verify(token, 'jwt-secret')
-        res.send({'msg':
-      `Hello, ${decoded.name}! Your JSON Web Token has been verified.`})
-    }catch (err) {
+        res.send({
+            'msg':
+                `Hello, ${decoded.name}! Your JSON Web Token has been verified.`
+        })
+    } catch (err) {
         res.status(401).send({ 'err': 'Bad JWT!' })
     }
 })
@@ -55,15 +57,19 @@ app.post('/login', (req, res) => {
             res.send({ 'msg': 'Login Successful!', 'token': token });
         }
     }
-)});
+    )
+});
 
 
 app.post('/register', (req, res) => {
+    debugger
     const { name, password } = req.body;
     const newUser = new User({ name, password });
+    console.log(name + password);
     newUser.save((err, user) => {
         if (err) {
             res.status(500).send(err.message);
+            console.log(err.message)
         } else {
             const payload = {
                 name: user.name,
@@ -82,65 +88,84 @@ app.get('/todo', (req, res) => {
         const decoded = jwt.verify(token, 'jwt-secret');
         // find the user in the database with the id in the decoded token
         console.log(decoded.name)
-        User.findOne({name: decoded.name}).lean().exec((err, user) => {
-            if (err) return res.status(500).send({'msg': 'Error finding the user.'});
-            if (!user) return res.status(404).send({'msg': 'User not found.'});
+        User.findOne({ name: decoded.name }).lean().exec((err, user) => {
+            if (err) return res.status(500).send({ 'msg': 'Error finding the user.' });
+            if (!user) return res.status(404).send({ 'msg': 'User not found.' });
             // return the user's todo list
             console.log(user)
             res.status(200).send(user);
         });
     } catch (e) {
-        res.status(401).send({'msg': 'Invalid token.'});
+        res.status(401).send({ 'msg': 'Invalid token.' });
     }
 });
 
 app.post('/todo', (req, res) => {
     const token = req.headers['authorization'].split(' ')[1];
     try {
-      const decoded = jwt.verify(token, 'jwt-secret');
-      // find the user in the database with the id in the decoded token
-      User.findOne({ name: decoded.name }, (err, user) => {
-        if (err) return res.status(500).send({ msg: 'Error finding the user.' });
-        if (!user) return res.status(404).send({ msg: 'User not found.' });
-        console.log('request body:', req.body);
-        user.todoList.push(req.body.todo);
-        user.save((err) => {
-          if (err) return res.status(500).send({ msg: 'Error saving the user.' });
-          res.status(200).json({ todo: req.body.todo });
-        });
-      });
-    } catch (e) {
-      res.status(401).send({ 'msg': 'Invalid token.' });
-    }
-});
-
-app.delete('/todo/:id', (req, res) => {
-    const token = req.headers['authorization'].split(' ')[1]
-    try {
         const decoded = jwt.verify(token, 'jwt-secret');
         // find the user in the database with the id in the decoded token
-        User.findOne({name: decoded.name}, (err, user) => {
-            if (err) return res.status(500).send({'msg': 'Error finding the user.'});
-            if (!user) return res.status(404).send({'msg': 'User not found.'});
-            // remove the todo from the user's todo list
-            user.todolist = user.todolist.filter(todo => todo.id !== req.params.id);
-            user.save((err, user) => {
-                if (err) return res.status(500).send({'msg': 'Error saving the user.'});
-                res.status(200).send({'msg': 'Todo deleted.'});
+        User.findOne({ name: decoded.name }, (err, user) => {
+            if (err) return res.status(500).send({ msg: 'Error finding the user.' });
+            if (!user) return res.status(404).send({ msg: 'User not found.' });
+            console.log('request body:', req.body);
+            user.todoList.push(req.body.todo);
+            user.save((err) => {
+                if (err) return res.status(500).send({ msg: 'Error saving the user.' });
+                res.status(200).json({ todo: req.body.todo });
             });
         });
     } catch (e) {
-        res.status(401).send({'msg': 'Invalid token.'});
+        res.status(401).send({ 'msg': 'Invalid token.' });
     }
 });
 
+// app.delete('/todo/:id', (req, res) => {
+//     const token = req.headers['authorization'].split(' ')[1]
+//     try {
+//         const decoded = jwt.verify(token, 'jwt-secret');
+//         // find the user in the database with the id in the decoded token
+//         User.findOne({ name: decoded.name }, (err, user) => {
+//             if (err) return res.status(500).send({ 'msg': 'Error finding the user.' });
+//             if (!user) return res.status(404).send({ 'msg': 'User not found.' });
+//             // remove the todo from the user's todo list
+//             //user.todolist = user.todolist.filter(todo => todo.id !== req.params.id);
+//             user.save((err, user) => {
+//                 if (err) return res.status(500).send({ 'msg': 'Error saving the user.' });
+//                 res.status(200).send({ 'msg': 'Todo deleted.' });
+//             });
+//         });
+//     } catch (e) {
+//         res.status(401).send({ 'msg': 'Invalid token.' });
+//     }
+// });
+
+app.delete('/todo/:id', (req, res) => {
+    const token = req.headers['authorization'].split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, 'jwt-secret');
+        User.findOne({ name: decoded.name }, (err, user) => {
+            if (err) return res.status(500).send({ 'msg': 'Error finding the user.' });
+            if (!user) return res.status(404).send({ 'msg': 'User not found.' });
+            const todo = user.todoList.find(todo => todo._id.toString() === req.params.id);
+            if (!todo) return res.status(404).send({ 'msg': 'Todo not found.' });
+            user.todoList.pull(todo);
+            user.save((err, user) => {
+                if (err) return res.status(500).send({ 'msg': 'Error saving the user.' });
+                res.status(200).send({ 'msg': 'Todo deleted.' });
+            });
+        });
+    } catch (e) {
+        res.status(401).send({ 'msg': 'Invalid token.' });
+    }
+});
 
 
 app.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`)
 })
 
-const uri = "mongodb+srv://DaneIverson:Daneci29@cluster0.5aju5ci.mongodb.net/users?retryWrites=true&w=majority"
+const uri = "mongodb+srv://DaneIverson:Daneci29@cluster0.5aju5ci.mongodb.net/pineapple?retryWrites=true&w=majority"
 
 mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true }, (req, res) => {
     console.log('MongoDB connected...')
