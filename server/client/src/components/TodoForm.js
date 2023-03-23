@@ -1,5 +1,4 @@
 import React from "react";
-import shortid from "shortid";  //3rd party library
 
 export default class TodoForm extends React.Component {
 
