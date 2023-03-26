@@ -101,13 +101,15 @@ app.post('/todo', (req, res) => {
             user.todoList.push(req.body.todo);
             user.save((err) => {
                 if (err) return res.status(500).send({ msg: 'Error saving the user.' });
-                res.status(200).json({ todo: req.body.todo });
+                const newTodo = user.todoList[user.todoList.length - 1]; // get the last item in the array
+                res.status(200).json({ id: newTodo._id, todo: newTodo.value });
             });
         });
     } catch (e) {
         res.status(401).send({ 'msg': 'Invalid token.' });
     }
 });
+
 
 // delete todos
 app.delete('/todo/:id', (req, res) => {
@@ -130,68 +132,44 @@ app.delete('/todo/:id', (req, res) => {
     }
 });
 
-// edit todos (not in use/not working)
 app.put('/todo/:id', (req, res) => {
     const token = req.headers['authorization'].split(' ')[1];
     try {
         const decoded = jwt.verify(token, 'jwt-secret');
         User.findOne({ name: decoded.name }, (err, user) => {
             if (err) return res.status(500).send({ 'msg': 'Error finding the user.' });
-            if (!user) return res.status(404).send({ 'msg': 'User not found.'});
-            const todo = user.todoList.find(todo => todo._id.toString() === req.params.id);
-            if (!todo) return res.status(404).send({ 'msg': 'Todo not found.'});
-            user.todoList.updateOne({_id: req.body.todo.id}, {text: req.body.todo.text})
+            if (!user) return res.status(404).send({ 'msg': 'User not found.' });
+            const todo = user.todoList.id(req.params.id);
+            if (!todo) return res.status(404).send({ 'msg': 'Todo not found.' });
+            todo.text = req.body.text;
             user.save((err, user) => {
                 if (err) return res.status(500).send({ 'msg': 'Error saving the user.' });
-                res.status(200).send({ 'msg': 'Todo updated'})
+                res.status(200).send({ 'msg': 'Todo updated' })
             });
         });
     } catch (e) {
-        res.status(401).send({ 'msg': 'Invalid token.'})
+        res.status(401).send({ 'msg': 'Invalid token.' })
     }
 })
 
-// checked: true/false
 app.post('/todos', (req, res) => {
     const token = req.headers['authorization'].split(' ')[1];
     try {
-    const decoded = jwt.verify(token, 'jwt-secret');
-    User.findOne({ name: decoded.name }, (err, user) => {
-        if (err) return res.status(500).send({ 'msg': 'Error finding the user.' });
-            if (!user) return res.status(404).send({ 'msg': 'User not found.'});
-            const todo = user.todoList.find(todo => todo._id.toString() === req.body.id);
-            if (!todo) return res.status(404).send({ 'msg': 'Todo not found.'});
-            console.log(req.body.id)
-            // TypeError user.todoList.update one is not a function
-        user.todoList.updateOne({_id: `new ObjectId("${req.body.id}")`}, {$set: {complete: req.body.complete}})
-        .then(() => {
-            res.status(200)
-        })
-        user.save((err, user) => {
-            if (err) return res.status(500).send({ 'msg': 'Error saving the user.' });
-            res.status(200).send({ 'msg': 'Todo updated'})
+        const decoded = jwt.verify(token, 'jwt-secret');
+        User.findOne({ name: decoded.name }, (err, user) => {
+            if (err) return res.status(500).send({ 'msg': 'Error finding the user.' });
+            if (!user) return res.status(404).send({ 'msg': 'User not found.' });
+            const todo = user.todoList.id(req.body.id);
+            if (!todo) return res.status(404).send({ 'msg': 'Todo not found.' });
+            todo.complete = req.body.complete;
+            user.save((err, user) => {
+                if (err) return res.status(500).send({ 'msg': 'Error saving the user.' });
+                res.status(200).send({ 'msg': 'Todo updated' })
+            });
         });
-    }).clone().catch(function(err){ console.log(err)})
-
-    //FUNCTION ABOVE AS WELL AS COMMENTED OUT FUNCTION BELOW SHOULD HYPOTHETICALLY WORK, RUNNING INTO ERRORS
-
-    // User.updateOne({
-    //     name: decoded.name,
-    //     'todoList.$._id': req.body._id
-    // }, 
-    // {$set: {
-    //     "todoList.$.complete": req.body.complete
-    // }}).then(() => {
-    //     res.status(200)
-    // })
-    
-    // .then(() => {
-    //     res.status(200).send({ 'msg': 'Todo updated.'})
-    // }).clone().catch(function(err){ console.log(err)})
-
     } catch (e) {
-    res.status(401).send({ 'msg': 'Invalid token.'})
-}
+        res.status(401).send({ 'msg': 'Invalid token.' })
+    }
 })
 
 // connect to host
