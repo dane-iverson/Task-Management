@@ -10,6 +10,8 @@ const TodoList = () => {
   const [name, setName] = useState('');
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [editedTodoText, setEditedTodoText] = useState('');
+  const [filter, setFilter] = useState('uncompleted') 
+
 
   useEffect(() => {
     const token = localStorage.getItem('jwt');
@@ -90,12 +92,23 @@ const TodoList = () => {
       })
   }
 
+  const getTodos = () => {
+    return todos.filter((todo) => filter === 'completed' ? todo.complete : !todo.complete);
+}
+
+  const changeFilter = (newFilter) => {
+    setFilter(newFilter)
+  }
+
   return (
     <div className='todo-form'>
       <h1 className='todo-header'>Welcome {name}</h1>
       <TodoForm onSubmit={addTodo} />
-      {todos &&
-        todos.map((todo) => (
+      <select onChange={(e) => changeFilter(e.target.value)}>
+        <option value='completed'>Completed</option>
+        <option value='uncompleted'>Uncompleted</option>
+      </select>
+      {getTodos().map((todo) => (
           <li key={todo._id} className='todo-item'>
             {editingTodoId === todo._id ? (
               <>
