@@ -14,10 +14,8 @@ const Login = () => {
     try {
       if (isRegistering) {
         const res = await axios.post('http://localhost:8080/register', { name, password });
-        console.log(res);
       } else {
         const res = await axios.post('http://localhost:8080/login', { name, password });
-        console.log(res);
         localStorage.setItem('jwt', res.data.token);
         setIsLoggedIn(true);
         setTodoList(res.data.todoList);
@@ -36,45 +34,45 @@ const Login = () => {
 
   return (
     <div>
-          {isLoggedIn ? (
-              <>
-              <TodoList todoList={todoList} />
-                  <button onClick={() => {
-                      setIsLoggedIn(false)
-                      setName('')
-                      setPassword('')
-                      localStorage.setItem('jwt', '')
-                  }}>
-                    Log Out
-                  </button>
-                  </>
-          ) : (
+      {isLoggedIn ? (
         <>
-        <form onSubmit={handleSubmit}>
-          <label>
-            Name:
-            <input
-              type="text"
-              value={name}
-              onChange={e => setName(e.target.value)}
-            />
-          </label>
+          <TodoList todoList={todoList} />
+          <button onClick={() => {
+            setIsLoggedIn(false)
+            setName('')
+            setPassword('')
+            localStorage.setItem('jwt', '')
+          }}>
+            Log Out
+          </button>
+        </>
+      ) : (
+        <>
+          <form onSubmit={handleSubmit}>
+            <label>
+              Name:
+              <input
+                type="text"
+                value={name}
+                onChange={e => setName(e.target.value)}
+              />
+            </label>
+            <br />
+            <label>
+              Password:
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
+            </label>
+            <br />
+            <button type="submit">{isRegistering ? 'Register' : 'Login'}</button>
+          </form>
           <br />
-          <label>
-            Password:
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-            />
-          </label>
-          <br />
-          <button type="submit">{isRegistering ? 'Register' : 'Login'}</button>
-        </form>
-        <br />
-      <button onClick={() => setIsRegistering(!isRegistering)}>
-        {isRegistering ? 'Switch to Login' : 'Switch to Register'}
-      </button>
+          <button onClick={() => setIsRegistering(!isRegistering)}>
+            {isRegistering ? 'Switch to Login' : 'Switch to Register'}
+          </button>
         </>
       )}
     </div>
