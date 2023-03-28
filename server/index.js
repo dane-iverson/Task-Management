@@ -52,7 +52,6 @@ app.post('/register', (req, res) => {
     debugger
     const { name, password } = req.body;
     const newUser = new User({ name, password });
-    console.log(name + password);
     newUser.save((err, user) => {
         if (err) {
             res.status(500).send(err.message);
@@ -75,7 +74,6 @@ app.get('/todo', (req, res) => {
     try {
         const decoded = jwt.verify(token, 'jwt-secret');
         // find the user in the database with the id in the decoded token
-        console.log(decoded.name)
         User.findOne({ name: decoded.name }).lean().exec((err, user) => {
             if (err) return res.status(500).send({ 'msg': 'Error finding the user.' });
             if (!user) return res.status(404).send({ 'msg': 'User not found.' });
@@ -94,7 +92,7 @@ app.post('/todo', (req, res) => {
     try {
         const decoded = jwt.verify(token, 'jwt-secret');
         // find the user in the database with the id in the decoded token
-        User.findOne({ name: decoded.name }, (err, user) => {
+        User.findOne({ name: req.body.selectedUser }, (err, user) => {
             if (err) return res.status(500).send({ msg: 'Error finding the user.' });
             if (!user) return res.status(404).send({ msg: 'User not found.' });
             console.log('request body:', req.body);
@@ -129,6 +127,16 @@ app.delete('/todo/:id', (req, res) => {
         });
     } catch (e) {
         res.status(401).send({ 'msg': 'Invalid token.' });
+    }
+});
+
+// get all users
+app.get('/users', async (req, res) => {
+    try {
+        const users = await User.find({}, '-password'); // exclude password field from response
+        res.status(200).send(users);
+    } catch (err) {
+        res.status(500).send({ 'msg': 'Server Error' });
     }
 });
 

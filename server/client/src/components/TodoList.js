@@ -10,7 +10,9 @@ const TodoList = () => {
   const [name, setName] = useState('');
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [editedTodoText, setEditedTodoText] = useState('');
-  const [filter, setFilter] = useState('uncompleted') 
+  const [filter, setFilter] = useState('Incomplete')
+  const [users, setUsers] = useState([]);
+  let selectedUser = '';
 
 
   useEffect(() => {
@@ -22,6 +24,15 @@ const TodoList = () => {
           setTodos(res.data.todoList)
         })
         .catch(err => console.log(err));
+
+      axios.get('http://localhost:8080/users', { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => {
+          setUsers(res.data)
+          setName(res.data[0].name)
+          setTodos(res.data[0].todoList)
+        })
+        .catch(err => console.log(err));
+
     }
   }, []);
 
@@ -30,10 +41,14 @@ const TodoList = () => {
   };
 
   const addTodo = (todo) => {
-    axios.post('http://localhost:8080/todo', { todo }, { headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` } })
+    const selectedUser = document.getElementById("usersDropdown").value;
+
+    axios.post('http://localhost:8080/todo', { todo, selectedUser }, { headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` } })
       .then(res => {
-        const newTodo = { ...todo, id: res.data.id }; // Add a unique key
-        setTodos([newTodo, ...todos])
+        if (selectedUser === name) {
+          const newTodo = { ...todo, id: res.data.id }; // Add a unique key
+          setTodos([newTodo, ...todos])
+        }
       })
       .catch(err => console.log(err.message));
   };
@@ -93,8 +108,9 @@ const TodoList = () => {
   }
 
   const getTodos = () => {
-    return todos.filter((todo) => filter === 'completed' ? todo.complete : !todo.complete);
-}
+    return todos.filter((todo) => todo?.complete && filter === 'completed' ? todo.complete : !todo.complete);
+  }
+
 
   const changeFilter = (newFilter) => {
     setFilter(newFilter)
@@ -103,39 +119,47 @@ const TodoList = () => {
   return (
     <div className='todo-form'>
       <h1 className='todo-header'>Welcome {name}</h1>
-      <TodoForm onSubmit={addTodo} />
+      <TodoForm onSubmit={(todo) => addTodo({ ...todo, userId: selectedUser._id })} />
       <select onChange={(e) => changeFilter(e.target.value)}>
         <option value='completed'>Completed</option>
-        <option value='uncompleted'>Uncompleted</option>
+        <option value='incomplete'>Incomplete</option>
+      </select>
+      <select className="usersDropdown" id='usersDropdown' onChange={(e) => {
+        selectedUser = users.find((user) => user.name === e.target.value);
+        getTodos();
+      }}>
+        {users.map((user) => (
+          <option key={user._id} value={user.name}>{user.name}</option>
+        ))}
       </select>
       {getTodos().map((todo) => (
-          <li key={todo._id} className='todo-item'>
-            {editingTodoId === todo._id ? (
-              <>
-                <input
-                  type="text"
-                  defaultValue={todo.text}
-                  onChange={(e) => setEditedTodoText(e.target.value)}
-                  className='todo-input'
-                />
-                <button onClick={() => onSaveEditedTodoText(todo)} className='todo-button'>Save</button>
-                <button onClick={() => setEditingTodoId(null)} className='todo-button'>Cancel</button>
-              </>
-            ) : (
-              <>
-                <input
-                  type={'checkbox'}
-                  checked={todo.complete}
-                  onChange={() => updateTodo(todo)}
-                  className='todo-checkbox'
-                ></input>
-                <span className='todo-text'>{todo.text}</span>
-                <button onClick={() => onEditTodo(todo._id)} className='todo-button'>Edit</button>
-                <button onClick={() => handleDeleteTodo(todo._id)} className='todo-button'>X</button>
-              </>
-            )}
-          </li>
-        ))}
+        <li key={todo._id} className='todo-item'>
+          {editingTodoId === todo._id ? (
+            <>
+              <input
+                type="text"
+                defaultValue={todo.text}
+                onChange={(e) => setEditedTodoText(e.target.value)}
+                className='todo-input'
+              />
+              <button onClick={() => onSaveEditedTodoText(todo)} className='todo-button'>Save</button>
+              <button onClick={() => setEditingTodoId(null)} className='todo-button'>Cancel</button>
+            </>
+          ) : (
+            <>
+              <input
+                type={'checkbox'}
+                checked={todo.complete}
+                onChange={() => updateTodo(todo)}
+                className='todo-checkbox'
+              ></input>
+              <span className='todo-text'>{todo.text}</span>
+              <button onClick={() => onEditTodo(todo._id)} className='todo-button'>Edit</button>
+              <button onClick={() => handleDeleteTodo(todo._id)} className='todo-button'>X</button>
+            </>
+          )}
+        </li>
+      ))}
     </div>
   );
 
