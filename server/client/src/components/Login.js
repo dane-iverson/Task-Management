@@ -36,7 +36,6 @@ const Login = () => {
     <div>
       {isLoggedIn ? (
         <>
-          <TodoList todoList={todoList} />
           <button onClick={() => {
             setIsLoggedIn(false)
             setName('')
@@ -45,6 +44,7 @@ const Login = () => {
           }}>
             Log Out
           </button>
+          <TodoList todoList={todoList} />
         </>
       ) : (
         <>

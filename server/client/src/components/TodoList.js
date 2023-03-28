@@ -64,13 +64,6 @@ const TodoList = () => {
       .catch((err) => console.log(err));
   };
 
-  // // edit todo text (currently not in use/working, was focusing on checkbox function)
-  // const handleEditTodo = (id) => {
-  //   axios.put(`http://localhost:8080/todo/${id}`, { id }, { headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` } })
-  //     .then(() => console.log('idk what to do now'))
-  //     .catch(err => console.log(err));
-  // }
-
   const onSaveEditedTodoText = (todo) => {
     axios
       .put(
@@ -108,7 +101,16 @@ const TodoList = () => {
   }
 
   const getTodos = () => {
-    return todos.filter((todo) => todo?.complete && filter === 'completed' ? todo.complete : !todo.complete);
+    switch (filter) {
+      case 'all':
+        return todos;
+      case 'completed':
+        return todos.filter((todo) => todo?.complete)
+      case 'incomplete':
+        return todos.filter((todo) => !todo?.complete)
+      default:
+        return todos;
+    }
   }
 
 
@@ -121,6 +123,7 @@ const TodoList = () => {
       <h1 className='todo-header'>Welcome {name}</h1>
       <TodoForm onSubmit={(todo) => addTodo({ ...todo, userId: selectedUser._id })} />
       <select onChange={(e) => changeFilter(e.target.value)}>
+        <option value='all'>All</option>
         <option value='completed'>Completed</option>
         <option value='incomplete'>Incomplete</option>
       </select>
