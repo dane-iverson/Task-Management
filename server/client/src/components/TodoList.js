@@ -10,6 +10,7 @@ const TodoList = () => {
   const [name, setName] = useState('');
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [editedTodoText, setEditedTodoText] = useState('');
+  const [editedTodoDate, setEditedTodoDate] = useState('');
   const [filter, setFilter] = useState('Incomplete')
   const [users, setUsers] = useState([]);
   let selectedUser = '';
@@ -64,23 +65,26 @@ const TodoList = () => {
       .catch((err) => console.log(err));
   };
 
+  //edit todo
   const onSaveEditedTodoText = (todo) => {
     axios
       .put(
         `http://localhost:8080/todo/${todo._id}`,
-        { text: editedTodoText },
+        { text: editedTodoText, deadline: editedTodoDate },
         { headers: { Authorization: `Bearer ${localStorage.getItem('jwt')}` } }
       )
       .then(() => {
         const newTodos = todos.map(t => {
           if (t._id === todo._id) {
             t.text = editedTodoText;
+            t.deadline = editedTodoDate;
           }
           return t;
         });
         setTodos(newTodos);
         setEditingTodoId(null);
         setEditedTodoText('');
+        setEditedTodoDate('')
       })
       .catch((err) => console.log(err));
   };
@@ -145,6 +149,12 @@ const TodoList = () => {
                 onChange={(e) => setEditedTodoText(e.target.value)}
                 className='todo-input'
               />
+              <input
+              type="date"
+              defaultValue={todo.deadline}
+              onChange={(e) => setEditedTodoDate(e.target.value)}
+              className='date-input'
+              />
               <button onClick={() => onSaveEditedTodoText(todo)} className='todo-button'>Save</button>
               <button onClick={() => setEditingTodoId(null)} className='todo-button'>Cancel</button>
             </>
@@ -157,6 +167,8 @@ const TodoList = () => {
                 className='todo-checkbox'
               ></input>
               <span className='todo-text'>{todo.text}</span>
+              <br />
+              <button>Due: {todo.deadline}</button>
               <button onClick={() => onEditTodo(todo._id)} className='todo-button'>Edit</button>
               <button onClick={() => handleDeleteTodo(todo._id)} className='todo-button'>X</button>
             </>

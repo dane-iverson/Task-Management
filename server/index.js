@@ -140,6 +140,7 @@ app.get('/users', async (req, res) => {
     }
 });
 
+// edit todos
 app.put('/todo/:id', (req, res) => {
     const token = req.headers['authorization'].split(' ')[1];
     try {
@@ -150,6 +151,7 @@ app.put('/todo/:id', (req, res) => {
             const todo = user.todoList.id(req.params.id);
             if (!todo) return res.status(404).send({ 'msg': 'Todo not found.' });
             todo.text = req.body.text;
+            todo.deadline = req.body.deadline;
             user.save((err, user) => {
                 if (err) return res.status(500).send({ 'msg': 'Error saving the user.' });
                 res.status(200).send({ 'msg': 'Todo updated' })
@@ -160,6 +162,7 @@ app.put('/todo/:id', (req, res) => {
     }
 })
 
+// todo checkbox
 app.post('/todos', (req, res) => {
     const token = req.headers['authorization'].split(' ')[1];
     try {

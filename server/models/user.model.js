@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   password: String,
   todoList: [{
     text: String,
+    deadline: Date,
     complete: Boolean
   }]
 });
