@@ -28,8 +28,8 @@ const TodoList = () => {
       axios.get('http://localhost:8080/users', { headers: { Authorization: `Bearer ${token}` } })
         .then(res => {
           setUsers(res.data)
-          setName(res.data[0].name)
-          setTodos(res.data[0].todoList)
+          // setName(res.data[0].name)
+          // setTodos(res.data[0].todoList)
         })
         .catch(err => console.log(err));
 
