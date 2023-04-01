@@ -11,8 +11,9 @@ const TodoList = () => {
   const [editingTodoId, setEditingTodoId] = useState(null);
   const [editedTodoText, setEditedTodoText] = useState('');
   const [editedTodoDate, setEditedTodoDate] = useState('');
-  const [filter, setFilter] = useState('Incomplete')
+  const [filter, setFilter] = useState('Incomplete');
   const [users, setUsers] = useState([]);
+  const [admin, setAdmin] = useState(false);
   let selectedUser = '';
 
 
@@ -23,6 +24,9 @@ const TodoList = () => {
         .then(res => {
           setName(res.data.name)
           setTodos(res.data.todoList)
+          if(res.data.userType === "Admin") {
+            setAdmin(true)
+          }
         })
         .catch(err => console.log(err));
 
@@ -51,7 +55,7 @@ const TodoList = () => {
           setTodos([newTodo, ...todos])
         }
       })
-      .catch(err => console.log(err.message));
+      .catch(err => console.log(err.msg));
   };
 
   const handleDeleteTodo = (id) => {
@@ -123,6 +127,21 @@ const TodoList = () => {
   }
 
   return (
+    admin ? (
+      <div>
+        <h1> Welcome admin</h1>
+        <h2>users</h2>
+        {users.map((user) => (
+          <>
+          <h2>{user.name}</h2>
+          <button onClick={handleDeleteUser(user)}> Delete User </button>
+          <li>{user.todoList.text}</li>
+          </>
+        ))}
+      </div>
+    )
+    :
+    (
     <div className='todo-form'>
       <h1 className='todo-header'>Welcome {name}</h1>
       <TodoForm onSubmit={(todo) => addTodo({ ...todo, userId: selectedUser._id })} />
@@ -176,9 +195,7 @@ const TodoList = () => {
         </li>
       ))}
     </div>
-  );
-
-
+  ));
 };
 
 export default TodoList;

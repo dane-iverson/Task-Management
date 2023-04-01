@@ -7,6 +7,7 @@ const cors = require('cors');
 const mongoose = require('mongoose')
 const User = require('./models/user.model')
 const { updateOne } = require('./models/user.model');
+const { ObjectId } = require('mongodb');
 var ObjectID = require('mongodb').ObjectID;
 
 app.use(cors())
@@ -29,19 +30,19 @@ app.get('/resource', (req, res) => {
 
 // login request
 app.post('/login', (req, res) => {
-    const { name, password } = req.body;
-    User.findOne({ name: name, password: password }, async (err, user) => {
+    const { name, password, userType } = req.body;
+    User.findOne({ name: name, password: password, userType: userType }, async (err, user) => {
         if (err) {
-            res.status(500).send({ 'msg': 'Server Error' });
+            res.status(500).send({ msg: 'Server Error' });
         } else if (!user) {
-            res.status(404).send({ 'msg': 'User not found' });
+            res.status(404).send({ msg: 'User not found' });
         } else {
             const payload = {
                 name: user.name,
                 todoList: user.todoList
             };
             const token = jwt.sign(JSON.stringify(payload), 'jwt-secret', { algorithm: 'HS256' });
-            res.send({ 'msg': 'Login Successful!', 'token': token });
+            res.send({ msg: 'Login Successful!', 'token': token });
         }
     }
     )
@@ -50,8 +51,8 @@ app.post('/login', (req, res) => {
 // create account
 app.post('/register', (req, res) => {
     debugger
-    const { name, password } = req.body;
-    const newUser = new User({ name, password });
+    const { name, password, userType } = req.body;
+    const newUser = new User({ name, password, userType });
     newUser.save((err, user) => {
         if (err) {
             res.status(500).send(err.message);
@@ -129,6 +130,16 @@ app.delete('/todo/:id', (req, res) => {
         res.status(401).send({ 'msg': 'Invalid token.' });
     }
 });
+
+app.delete('user/:id', (req, res) => {
+    const token = req.headers['authorization'].split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, 'jwt-secret');
+        User.deleteOne({_id: ObjectId(req.params._id)});
+    } catch (e) {
+        res.status(401).send({'msg': 'User cannot be deleted.'})
+    }
+})
 
 // get all users
 app.get('/users', async (req, res) => {

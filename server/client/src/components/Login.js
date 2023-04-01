@@ -8,22 +8,29 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [todoList, setTodoList] = useState([]);
+  const [userType, setUserType] = useState("")
+  const [adminKey, setAdminKey] = useState("")
 
   const handleSubmit = async e => {
+    if (userType === "Admin" && adminKey!="0301295856084") {
+      e.preventDefault();
+      alert("Invalid Admin")
+    } else {
     e.preventDefault();
     try {
       if (isRegistering) {
-        const res = await axios.post('http://localhost:8080/register', { name, password });
+        const res = await axios.post('http://localhost:8080/register', { name, password, userType });
       } else {
-        const res = await axios.post('http://localhost:8080/login', { name, password });
+        const res = await axios.post('http://localhost:8080/login', { name, password, userType }); // here
         localStorage.setItem('jwt', res.data.token);
         setIsLoggedIn(true);
         setTodoList(res.data.todoList);
       }
     } catch (err) {
-      console.log(err);
+      alert("Invalid Username or Password")
     }
-  };
+  };}
+    
 
   useEffect(() => {
     const token = localStorage.getItem('jwt');
@@ -49,6 +56,42 @@ const Login = () => {
       ) : (
         <>
           <form onSubmit={handleSubmit}>
+            <h2>
+            {isRegistering ? 'Register' : 'Login'}
+            </h2>
+            {isRegistering ? 'Register as ' : 'Login as '}
+              <div>
+                <input 
+                type="radio"
+                name='userType'
+                value="User"
+                onChange={(e) => setUserType(e.target.value)}
+                />
+                User
+                <input 
+                type="radio"
+                name='userType'
+                value="Admin"
+                onChange={(e) => setUserType(e.target.value)}
+                />
+                Admin
+              </div>
+              {userType === "Admin" ? 
+              <div>
+                <label>Admin Key:</label>
+                <input 
+                type="text"
+                className='admin-key'
+                placeholder='admin-key'
+                onChange={(e) => setAdminKey(e.target.value)}
+                />
+              </div>
+              :
+              null
+              }
+              
+
+
             <label>
               Name:
               <input

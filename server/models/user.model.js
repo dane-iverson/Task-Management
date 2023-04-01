@@ -6,6 +6,7 @@ const userSchema = new mongoose.Schema({
     unique: true
   },
   password: String,
+  userType: String,
   todoList: [{
     text: String,
     deadline: Date,
